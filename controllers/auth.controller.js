@@ -1,5 +1,6 @@
 import bcryptjs from 'bcryptjs';
 import UserActivation from '../models/userActivation.model.js';
+import { errorHandler } from '../utils/error.js';
 import jwt from 'jsonwebtoken';
 
 export const signup = async (request, response, next) => {
@@ -32,7 +33,7 @@ export const signup = async (request, response, next) => {
     }
 };
 
-export const sigin = async (request, response, next) => {
+export const signin = async (request, response, next) => {
     const { email, password } = request.body;
 
     if (!email || !password || email === '' || password === '') {
