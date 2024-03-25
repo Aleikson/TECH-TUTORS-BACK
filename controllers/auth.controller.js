@@ -64,3 +64,50 @@ export const signin = async (request, response, next) => {
         next(error);
     }
 };
+
+export const google = async (request, response, next) => {
+    const { email, name, googlePhotoUrl } = request.body;
+    try {
+      const user = await UserActivation.findOne({ email });
+      if (user) {
+        const token = jwt.sign(
+          { id: user._id, isAdmin: user.isAdmin },
+          process.env.JWT_SECRET
+        );
+        const { password, ...rest } = user._doc;
+        response
+          .status(200)
+          .cookie('access_token', token, {
+            httpOnly: true,
+          })
+          .json(rest);
+      } else {
+        const generatedPassword =
+          Math.random().toString(36).slice(-8) +
+          Math.random().toString(36).slice(-8);
+        const hashedPassword = bcryptjs.hashSync(generatedPassword, 10);
+        const newUser = new UserActivation({
+          username:
+            name.toLowerCase().split(' ').join('') +
+            Math.random().toString(9).slice(-4),
+          email,
+          password: hashedPassword,
+          profilePicture: googlePhotoUrl,
+        });
+        await newUser.save();
+        const token = jwt.sign(
+          { id: newUser._id, isAdmin: newUser.isAdmin },
+          process.env.JWT_SECRET
+        );
+        const { password, ...rest } = newUser._doc;
+        response
+          .status(200)
+          .cookie('access_token', token, {
+            httpOnly: true,
+          })
+          .json(rest);
+      }
+    } catch (error) {
+      next(error);
+    }
+  };
